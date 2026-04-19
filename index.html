@@ -1,0 +1,714 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>ByteCut — Sharpen Your Links</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+
+<style>
+/* ── Reset ── */
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+
+/* ── Tokens ── */
+:root{
+  --bg:#080a0f;
+  --bg2:#0d1017;
+  --panel:#101420;
+  --panel2:#141926;
+  --border:#1c2235;
+  --border2:#242d45;
+  --lime:#b9ff4b;
+  --lime2:#d4ff7a;
+  --lime-dim:rgba(185,255,75,0.08);
+  --lime-glow:rgba(185,255,75,0.18);
+  --cyan:#3ff5d0;
+  --red:#ff4d6d;
+  --text:#dde3f0;
+  --text2:#7a8399;
+  --text3:#4a5270;
+  --mono:'DM Mono',monospace;
+  --sans:'DM Sans',sans-serif;
+  --display:'Bebas Neue',sans-serif;
+  --r:14px;
+  --r2:10px;
+}
+
+/* ── Base ── */
+body{
+  background:var(--bg);
+  color:var(--text);
+  font-family:var(--sans);
+  min-height:100vh;
+  overflow-x:hidden;
+  cursor:default;
+}
+
+/* ── Animated background ── */
+.bg-canvas{
+  position:fixed;inset:0;z-index:0;
+  background:
+    radial-gradient(ellipse 60% 50% at 15% 20%, rgba(185,255,75,0.04) 0%, transparent 60%),
+    radial-gradient(ellipse 50% 60% at 85% 80%, rgba(63,245,208,0.03) 0%, transparent 60%),
+    var(--bg);
+}
+.bg-grid{
+  position:fixed;inset:0;z-index:0;
+  background-image:
+    linear-gradient(var(--border) 1px, transparent 1px),
+    linear-gradient(90deg, var(--border) 1px, transparent 1px);
+  background-size:52px 52px;
+  opacity:0.35;
+  mask-image:radial-gradient(ellipse 80% 80% at 50% 40%, black 30%, transparent 100%);
+}
+
+/* ── Floating orbs ── */
+.orb{
+  position:fixed;border-radius:50%;filter:blur(80px);pointer-events:none;z-index:0;
+  animation:drift 12s ease-in-out infinite alternate;
+}
+.orb-1{width:500px;height:500px;background:rgba(185,255,75,0.035);top:-100px;left:-150px;animation-delay:0s}
+.orb-2{width:400px;height:400px;background:rgba(63,245,208,0.025);bottom:-80px;right:-100px;animation-delay:-5s}
+@keyframes drift{from{transform:translate(0,0)}to{transform:translate(30px,20px)}}
+
+/* ── Layout ── */
+#app{
+  position:relative;z-index:1;
+  min-height:100vh;
+  display:flex;flex-direction:column;align-items:center;
+  padding:3.5rem 1.25rem 5rem;
+}
+
+/* ── Header ── */
+header{text-align:center;margin-bottom:3.5rem;animation:fadeDown 0.7s ease both}
+
+.logo-row{
+  display:inline-flex;align-items:center;gap:10px;margin-bottom:1rem;
+}
+.logo-mark{
+  width:40px;height:40px;background:var(--lime);border-radius:10px;
+  display:grid;place-items:center;flex-shrink:0;
+  box-shadow:0 0 24px rgba(185,255,75,0.35);
+}
+.logo-mark svg{width:22px;height:22px}
+.logo-wordmark{
+  font-family:var(--display);
+  font-size:2.6rem;
+  letter-spacing:0.04em;
+  line-height:1;
+  color:#fff;
+}
+.logo-wordmark em{color:var(--lime);font-style:normal}
+
+.header-sub{
+  font-size:0.8rem;
+  color:var(--text3);
+  letter-spacing:0.18em;
+  text-transform:uppercase;
+  font-family:var(--mono);
+}
+
+/* ── Badge ── */
+.badge{
+  display:inline-flex;align-items:center;gap:6px;
+  background:var(--lime-dim);
+  border:1px solid rgba(185,255,75,0.2);
+  border-radius:99px;
+  padding:4px 12px 4px 8px;
+  font-size:0.7rem;
+  font-family:var(--mono);
+  color:var(--lime);
+  margin-bottom:1rem;
+  letter-spacing:0.06em;
+}
+.badge-dot{width:6px;height:6px;border-radius:50%;background:var(--lime);animation:pulse 2s ease infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:0.4}}
+
+/* ── Main card ── */
+.main-card{
+  width:100%;max-width:600px;
+  background:var(--panel);
+  border:1px solid var(--border2);
+  border-radius:20px;
+  padding:2.25rem 2rem;
+  box-shadow:
+    0 0 0 1px rgba(185,255,75,0.03),
+    0 32px 80px rgba(0,0,0,0.5),
+    inset 0 1px 0 rgba(255,255,255,0.04);
+  animation:fadeUp 0.7s 0.1s ease both;
+  position:relative;
+  overflow:hidden;
+}
+.main-card::before{
+  content:'';position:absolute;top:0;left:0;right:0;height:1px;
+  background:linear-gradient(90deg,transparent,rgba(185,255,75,0.3),transparent);
+}
+
+.section-label{
+  font-family:var(--mono);font-size:0.62rem;
+  text-transform:uppercase;letter-spacing:0.18em;
+  color:var(--text3);margin-bottom:0.8rem;
+}
+
+/* ── Input group ── */
+.input-wrap{
+  display:flex;gap:0;
+  border:1.5px solid var(--border2);
+  border-radius:var(--r);
+  overflow:hidden;
+  transition:border-color 0.2s, box-shadow 0.2s;
+  background:var(--panel2);
+}
+.input-wrap:focus-within{
+  border-color:var(--lime);
+  box-shadow:0 0 0 4px rgba(185,255,75,0.1),0 0 20px rgba(185,255,75,0.06);
+}
+.url-input{
+  flex:1;background:transparent;border:none;outline:none;
+  padding:1rem 1.1rem;
+  font-size:0.88rem;font-family:var(--mono);
+  color:var(--text);min-width:0;
+}
+.url-input::placeholder{color:var(--text3)}
+
+.shorten-btn{
+  flex-shrink:0;
+  background:var(--lime);color:#080a0f;
+  border:none;padding:0 1.4rem;
+  font-family:var(--sans);font-weight:600;font-size:0.85rem;
+  cursor:pointer;letter-spacing:0.03em;
+  display:flex;align-items:center;gap:8px;
+  transition:background 0.15s,transform 0.1s,box-shadow 0.15s;
+  white-space:nowrap;position:relative;overflow:hidden;
+}
+.shorten-btn::after{
+  content:'';position:absolute;inset:0;
+  background:linear-gradient(135deg,rgba(255,255,255,0.15),transparent);
+  pointer-events:none;
+}
+.shorten-btn:hover{background:var(--lime2);box-shadow:0 0 20px rgba(185,255,75,0.3)}
+.shorten-btn:active{transform:scale(0.97)}
+.shorten-btn:disabled{background:var(--text3);cursor:not-allowed;box-shadow:none;transform:none}
+
+/* ── Spinner ── */
+.spinner{
+  width:14px;height:14px;border:2px solid rgba(8,10,15,0.3);
+  border-top-color:#080a0f;border-radius:50%;
+  animation:spin 0.65s linear infinite;flex-shrink:0;
+}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* ── Error ── */
+.error-msg{
+  margin-top:0.9rem;
+  padding:0.75rem 1rem;
+  background:rgba(255,77,109,0.06);
+  border:1px solid rgba(255,77,109,0.22);
+  border-radius:var(--r2);
+  font-family:var(--mono);font-size:0.75rem;
+  color:var(--red);
+  display:flex;align-items:center;gap:8px;
+  animation:shakeIn 0.4s ease both;
+}
+@keyframes shakeIn{
+  0%{transform:translateX(-8px);opacity:0}
+  40%{transform:translateX(5px)}
+  70%{transform:translateX(-3px)}
+  100%{transform:translateX(0);opacity:1}
+}
+
+/* ── Result ── */
+.result-box{
+  margin-top:1.1rem;
+  background:linear-gradient(135deg,rgba(185,255,75,0.05),rgba(63,245,208,0.03));
+  border:1px solid rgba(185,255,75,0.22);
+  border-radius:var(--r);
+  padding:1.1rem 1.2rem;
+  animation:popIn 0.4s cubic-bezier(0.34,1.56,0.64,1) both;
+  position:relative;overflow:hidden;
+}
+.result-box::before{
+  content:'';position:absolute;top:0;left:0;right:0;height:1px;
+  background:linear-gradient(90deg,transparent,rgba(185,255,75,0.4),transparent);
+}
+@keyframes popIn{
+  from{opacity:0;transform:scale(0.96) translateY(6px)}
+  to{opacity:1;transform:scale(1) translateY(0)}
+}
+.result-tag{
+  font-family:var(--mono);font-size:0.6rem;
+  text-transform:uppercase;letter-spacing:0.2em;
+  color:var(--lime);margin-bottom:0.6rem;
+  display:flex;align-items:center;gap:6px;
+}
+.result-tag::before{
+  content:'';width:6px;height:6px;border-radius:50%;background:var(--lime);
+  animation:pulse 1.5s ease infinite;
+}
+.result-row{display:flex;align-items:center;gap:0.7rem}
+.result-link{
+  flex:1;font-family:var(--mono);font-size:0.9rem;
+  color:var(--lime);text-decoration:none;word-break:break-all;
+  transition:color 0.15s;
+}
+.result-link:hover{color:var(--lime2);text-decoration:underline;text-underline-offset:3px}
+
+.copy-btn{
+  flex-shrink:0;
+  background:rgba(185,255,75,0.1);
+  border:1px solid rgba(185,255,75,0.25);
+  color:var(--lime);
+  padding:0.45rem 0.9rem;
+  border-radius:8px;font-size:0.72rem;
+  font-family:var(--mono);cursor:pointer;
+  display:flex;align-items:center;gap:6px;
+  transition:all 0.15s;white-space:nowrap;
+}
+.copy-btn:hover{background:rgba(185,255,75,0.18);border-color:var(--lime)}
+.copy-btn.copied{
+  background:rgba(63,245,208,0.1);border-color:rgba(63,245,208,0.3);
+  color:var(--cyan);
+}
+
+/* ── Divider ── */
+.divider{
+  width:100%;max-width:600px;
+  margin:2rem 0 1.25rem;
+  display:flex;align-items:center;gap:1rem;
+  animation:fadeUp 0.7s 0.2s ease both;
+}
+.divider-line{flex:1;height:1px;background:var(--border)}
+.divider-text{
+  font-family:var(--mono);font-size:0.6rem;
+  text-transform:uppercase;letter-spacing:0.2em;color:var(--text3);
+  white-space:nowrap;
+}
+
+/* ── History ── */
+.history{
+  width:100%;max-width:600px;
+  display:flex;flex-direction:column;gap:0.5rem;
+  animation:fadeUp 0.7s 0.25s ease both;
+}
+
+.hist-item{
+  background:var(--panel);
+  border:1px solid var(--border);
+  border-radius:var(--r2);
+  padding:0.85rem 1rem;
+  display:flex;align-items:center;gap:0.75rem;
+  transition:border-color 0.2s,background 0.2s;
+  animation:fadeUp 0.35s ease both;
+}
+.hist-item:hover{border-color:var(--border2);background:var(--panel2)}
+
+.hist-num{
+  font-family:var(--mono);font-size:0.65rem;color:var(--text3);
+  min-width:20px;text-align:center;flex-shrink:0;
+}
+.hist-icon{
+  width:28px;height:28px;border-radius:7px;
+  background:var(--lime-dim);border:1px solid rgba(185,255,75,0.12);
+  display:grid;place-items:center;flex-shrink:0;
+}
+.hist-icon svg{width:13px;height:13px;color:var(--lime)}
+
+.hist-content{flex:1;min-width:0}
+.hist-short{
+  font-family:var(--mono);font-size:0.78rem;color:var(--lime);
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+  text-decoration:none;
+}
+.hist-short:hover{color:var(--lime2)}
+.hist-orig{
+  font-size:0.7rem;color:var(--text3);margin-top:2px;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+}
+
+.hist-copy{
+  flex-shrink:0;background:none;
+  border:1px solid var(--border2);color:var(--text3);
+  padding:0.3rem 0.6rem;border-radius:6px;
+  font-size:0.65rem;font-family:var(--mono);cursor:pointer;
+  transition:all 0.15s;white-space:nowrap;
+}
+.hist-copy:hover{border-color:var(--lime);color:var(--lime)}
+.hist-copy.copied{border-color:var(--cyan);color:var(--cyan)}
+
+/* ── Empty state ── */
+.empty-state{
+  text-align:center;padding:2rem 1rem;
+  font-family:var(--mono);font-size:0.72rem;color:var(--text3);
+  letter-spacing:0.08em;
+}
+.empty-state svg{
+  width:32px;height:32px;color:var(--border2);
+  margin:0 auto 0.75rem;display:block;
+}
+
+/* ── Footer ── */
+footer{
+  margin-top:3.5rem;
+  font-family:var(--mono);font-size:0.58rem;
+  color:var(--text3);text-align:center;letter-spacing:0.14em;
+  text-transform:uppercase;
+  animation:fadeUp 0.7s 0.3s ease both;
+}
+footer span{color:var(--lime)}
+.footer-links{
+  display:flex;align-items:center;justify-content:center;
+  gap:1rem;margin-top:1rem;flex-wrap:wrap;
+}
+.footer-link{
+  display:inline-flex;align-items:center;gap:6px;
+  font-family:var(--mono);font-size:0.62rem;letter-spacing:0.08em;
+  color:var(--text3);text-decoration:none;
+  padding:6px 14px;border-radius:99px;
+  border:1px solid var(--border2);background:var(--panel);
+  transition:all 0.2s;
+}
+.footer-link:hover{color:var(--lime);border-color:rgba(185,255,75,0.3);background:var(--lime-dim)}
+footer a{
+  color:var(--text3);text-decoration:none;
+  display:inline-flex;align-items:center;gap:5px;
+  transition:color 0.15s;
+}
+footer a:hover{color:var(--lime)}
+.footer-links{
+  display:flex;align-items:center;justify-content:center;
+  gap:1.25rem;margin-top:0.75rem;flex-wrap:wrap;
+}
+.footer-link{
+  display:inline-flex;align-items:center;gap:6px;
+  font-family:var(--mono);font-size:0.6rem;letter-spacing:0.1em;
+  color:var(--text3);text-decoration:none;
+  padding:5px 12px;border-radius:99px;
+  border:1px solid var(--border);background:var(--panel);
+  transition:all 0.2s;
+}
+.footer-link:hover{color:var(--lime);border-color:rgba(185,255,75,0.3);background:var(--lime-dim)}
+.footer-link svg{width:12px;height:12px;flex-shrink:0}
+
+/* ── Stats strip ── */
+.stats-strip{
+  display:flex;gap:2rem;justify-content:center;
+  margin-bottom:3rem;
+  animation:fadeUp 0.7s 0.05s ease both;
+}
+.stat{text-align:center}
+.stat-val{
+  font-family:var(--display);font-size:1.6rem;
+  color:var(--lime);line-height:1;
+}
+.stat-key{
+  font-family:var(--mono);font-size:0.58rem;
+  text-transform:uppercase;letter-spacing:0.15em;color:var(--text3);
+  margin-top:3px;
+}
+
+/* ── Keyframes ── */
+@keyframes fadeDown{from{opacity:0;transform:translateY(-20px)}to{opacity:1;transform:translateY(0)}}
+@keyframes fadeUp{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:translateY(0)}}
+
+/* ── Responsive ── */
+@media(max-width:520px){
+  .shorten-btn{padding:0 1rem;font-size:0.78rem}
+  .main-card{padding:1.5rem 1.1rem}
+  .stats-strip{gap:1.25rem}
+  .stat-val{font-size:1.3rem}
+  .logo-wordmark{font-size:2rem}
+}
+</style>
+</head>
+<body>
+
+<div class="bg-canvas"></div>
+<div class="bg-grid"></div>
+<div class="orb orb-1"></div>
+<div class="orb orb-2"></div>
+
+<div id="app">
+
+  <!-- Header -->
+  <header>
+    <div class="badge">
+      <span class="badge-dot"></span>
+      Live · AWS Lambda + DynamoDB
+    </div>
+    <div class="logo-row">
+      <div class="logo-mark">
+        <!-- Scissors icon -->
+        <svg viewBox="0 0 24 24" fill="none" stroke="#080a0f" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="6" cy="6" r="3"/><circle cx="6" cy="18" r="3"/>
+          <line x1="20" y1="4" x2="8.12" y2="15.88"/>
+          <line x1="14.47" y1="14.48" x2="20" y2="20"/>
+          <line x1="8.12" y1="8.12" x2="12" y2="12"/>
+        </svg>
+      </div>
+      <div class="logo-wordmark">Byte<em>Cut</em></div>
+    </div>
+    <p class="header-sub">// Sharpen your links. Ship faster.</p>
+  </header>
+
+  <!-- Stats -->
+  <div class="stats-strip">
+    <div class="stat"><div class="stat-val" id="statCount">0</div><div class="stat-key">Links Cut</div></div>
+    <div class="stat"><div class="stat-val">∞</div><div class="stat-key">Clicks Tracked</div></div>
+    <div class="stat"><div class="stat-val">&lt;50ms</div><div class="stat-key">Avg Redirect</div></div>
+  </div>
+
+  <!-- Main card -->
+  <div class="main-card">
+    <p class="section-label">// Paste your URL</p>
+
+    <div class="input-wrap" id="inputWrap">
+      <input
+        type="url"
+        id="urlInput"
+        class="url-input"
+        placeholder="https://your-very-long-url.com/with/some/path?query=value"
+        autocomplete="off"
+        spellcheck="false"
+      />
+      <button class="shorten-btn" id="shortenBtn" onclick="handleShorten()">
+        <span id="btnContent">Cut it →</span>
+      </button>
+    </div>
+
+    <div id="errorMsg" class="error-msg" style="display:none">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+      <span id="errorText"></span>
+    </div>
+
+    <div id="resultBox" class="result-box" style="display:none">
+      <div class="result-tag">Short URL ready</div>
+      <div class="result-row">
+        <a id="resultLink" class="result-link" href="#" target="_blank" rel="noopener"></a>
+        <button class="copy-btn" id="mainCopyBtn" onclick="copyUrl(this, '')">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+          Copy
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Divider -->
+  <div class="divider">
+    <div class="divider-line"></div>
+    <span class="divider-text">Recent cuts</span>
+    <div class="divider-line"></div>
+  </div>
+
+  <!-- History -->
+  <div class="history" id="historyList">
+    <div class="empty-state" id="emptyState">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round">
+        <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/>
+        <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/>
+      </svg>
+      No links yet — paste a URL above to get started
+    </div>
+  </div>
+
+  <footer>
+    ByteCut &nbsp;·&nbsp; Powered by <span>AWS Lambda</span> + <span>DynamoDB</span> &nbsp;·&nbsp; Built by <span>Harshit</span>
+    <div class="footer-links">
+      <a class="footer-link" href="https://github.com/harshitsaini0017" target="_blank" rel="noopener">
+        <svg viewBox="0 0 24 24" fill="currentColor" width="12" height="12"><path d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.531 1.032 1.531 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0 1 12 6.844a9.59 9.59 0 0 1 2.504.337c1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.02 10.02 0 0 0 22 12.017C22 6.484 17.522 2 12 2z"/></svg>
+        github.com/harshitsaini0017
+      </a>
+      <a class="footer-link" href="mailto:harshitsaini0017@gmail.com">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" width="12" height="12"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/></svg>
+        harshitsaini0017@gmail.com
+      </a>
+    </div>
+  </footer>
+
+</div>
+
+<script>
+// ══════════════════════════════════════════════
+// CONFIG
+// ══════════════════════════════════════════════
+const API_BASE = "https://enmts2iw06.execute-api.us-east-1.amazonaws.com";
+
+// ══════════════════════════════════════════════
+// STATE
+// ══════════════════════════════════════════════
+let history = [];
+let currentShortUrl = "";
+
+// ══════════════════════════════════════════════
+// HELPERS
+// ══════════════════════════════════════════════
+function isValidUrl(str) {
+  try {
+    const u = new URL(str.trim());
+    return u.protocol === "http:" || u.protocol === "https:";
+  } catch {
+    return false;
+  }
+}
+
+function setError(msg) {
+  const el = document.getElementById("errorMsg");
+  document.getElementById("errorText").textContent = msg;
+  el.style.display = msg ? "flex" : "none";
+}
+
+function setResult(shortUrl) {
+  currentShortUrl = shortUrl;
+  const box = document.getElementById("resultBox");
+  const link = document.getElementById("resultLink");
+  const copyBtn = document.getElementById("mainCopyBtn");
+  link.href = shortUrl;
+  link.textContent = shortUrl;
+  copyBtn.onclick = () => copyUrl(copyBtn, shortUrl);
+  box.style.display = "block";
+}
+
+function setLoading(on) {
+  const btn = document.getElementById("shortenBtn");
+  const content = document.getElementById("btnContent");
+  const input = document.getElementById("urlInput");
+  btn.disabled = on;
+  input.disabled = on;
+  content.innerHTML = on
+    ? `<span class="spinner"></span>Cutting...`
+    : `Cut it →`;
+}
+
+function copyUrl(btn, url) {
+  const target = url || currentShortUrl;
+  navigator.clipboard.writeText(target).catch(() => {
+    const ta = document.createElement("textarea");
+    ta.value = target; document.body.appendChild(ta);
+    ta.select(); document.execCommand("copy");
+    document.body.removeChild(ta);
+  });
+  const orig = btn.innerHTML;
+  btn.classList.add("copied");
+  btn.innerHTML = `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg> Copied!`;
+  setTimeout(() => { btn.classList.remove("copied"); btn.innerHTML = orig; }, 2000);
+}
+
+function updateStatCount() {
+  document.getElementById("statCount").textContent = history.length;
+}
+
+// ══════════════════════════════════════════════
+// RENDER HISTORY
+// ══════════════════════════════════════════════
+function renderHistory() {
+  const list = document.getElementById("historyList");
+  const empty = document.getElementById("emptyState");
+
+  if (!history.length) {
+    list.innerHTML = "";
+    list.appendChild(empty);
+    empty.style.display = "block";
+    return;
+  }
+
+  list.innerHTML = history.map((item, i) => `
+    <div class="hist-item" style="animation-delay:${i * 40}ms">
+      <span class="hist-num">${String(i + 1).padStart(2, "0")}</span>
+      <div class="hist-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+          <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/>
+          <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/>
+        </svg>
+      </div>
+      <div class="hist-content">
+        <a class="hist-short" href="${item.shortUrl}" target="_blank" rel="noopener">${item.shortUrl}</a>
+        <div class="hist-orig" title="${item.originalUrl}">${item.originalUrl}</div>
+      </div>
+      <button class="hist-copy" onclick="copyHistItem(this, '${item.shortUrl}')">Copy</button>
+    </div>
+  `).join("");
+}
+
+function copyHistItem(btn, url) {
+  navigator.clipboard.writeText(url).catch(() => {});
+  btn.textContent = "✓ Done";
+  btn.classList.add("copied");
+  setTimeout(() => { btn.textContent = "Copy"; btn.classList.remove("copied"); }, 2000);
+}
+
+// ══════════════════════════════════════════════
+// MAIN — SHORTEN
+// ══════════════════════════════════════════════
+async function handleShorten() {
+  const input = document.getElementById("urlInput");
+  const raw = input.value.trim();
+
+  // Reset UI
+  setError("");
+  document.getElementById("resultBox").style.display = "none";
+
+  // Validate
+  if (!raw) { setError("Please enter a URL to shorten."); return; }
+  if (!isValidUrl(raw)) {
+    setError("That doesn't look valid. Make sure it starts with https:// or http://");
+    return;
+  }
+
+  setLoading(true);
+
+  try {
+    const res = await fetch(`${API_BASE}/shorten`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ url: raw }),
+    });
+
+    let data;
+    try { data = await res.json(); } catch { throw new Error("Server returned an unexpected response."); }
+
+    if (!res.ok) {
+      throw new Error(data?.error || data?.message || `Server error (${res.status})`);
+    }
+
+    // Construct short URL from shortId
+    if (!data.shortId) throw new Error("API did not return a shortId.");
+    const shortUrl = `${API_BASE}/${data.shortId}`;
+
+    // Show result
+    setResult(shortUrl);
+
+    // Add to history (max 10, newest first)
+    history.unshift({ shortUrl, originalUrl: raw });
+    if (history.length > 10) history.pop();
+    renderHistory();
+    updateStatCount();
+
+    // Clear input
+    input.value = "";
+
+  } catch (err) {
+    if (err.name === "TypeError" || err.message.includes("fetch")) {
+      setError("Cannot reach the API. Check your network or CORS configuration.");
+    } else {
+      setError(err.message || "Something went wrong. Please try again.");
+    }
+  } finally {
+    setLoading(false);
+  }
+}
+
+// ══════════════════════════════════════════════
+// KEYBOARD SHORTCUT
+// ══════════════════════════════════════════════
+document.getElementById("urlInput").addEventListener("keydown", (e) => {
+  if (e.key === "Enter") handleShorten();
+});
+
+// ══════════════════════════════════════════════
+// INIT
+// ══════════════════════════════════════════════
+renderHistory();
+</script>
+</body>
+</html>
